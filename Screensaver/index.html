@@ -1,0 +1,203 @@
+<html>
+<head>
+  <title>FOR MOTHERLAND</title>
+  <link rel="shortcut icon" type="image/x-icon" href="icon.jpg" />
+</head>
+
+<body background="soviet.jpg">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.16/p5.js" type="text/javascript">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.16/addons/p5.dom.js" type="text/javascript">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.16/addons/p5.sound.js" type="text/javascript">
+        p5.disableFriendlyErrors = true;
+
+        var bot;
+        var hyunseo;
+        var dragon;
+
+let babies = [];
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  background(201, 0, 201);
+
+  rectMode(CENTER);
+
+  for (let i = 0; i < 1000; i++) {
+    babies[i] = new Robot();
+    babies[i].brain = 2;
+    babies[i].af = 3;
+    babies[i].pos.x = random(0, width);
+    babies[i].pos.y = random(0, height);
+    babies[i].size = 1;
+  }
+
+  bot = new Robot();
+  bot.pos.y = 44;
+  bot.af = 3;
+  bot.brain = 2;
+
+  dragon = new Robot();
+  dragon.pos.x = 50;
+  dragon.fill = color(0, 200, 0);
+
+  hyunseo = new Robot();
+  hyunseo.pos.x = -50;
+  hyunseo.fill = color(0, 0, 200);
+  hyunseo.af = 0.5;
+}
+
+function draw() {
+  background(0);
+
+  bot.think();
+  bot.draw();
+  bot.update();
+
+  dragon.think();
+  dragon.draw();
+  dragon.update();
+
+  hyunseo.think();
+  hyunseo.draw();
+  hyunseo.update();
+
+  for (let i = 0; i < babies.length; i++) {
+    babies[i].think();
+    babies[i].update();
+    babies[i].draw();
+  }
+
+  collision(bot, dragon);
+  collision(bot, hyunseo);
+  collision(dragon, hyunseo);
+}
+
+function collision(_ob1, _ob2) {
+  let dist = p5.Vector.dist(_ob1.pos, _ob2.pos);
+  let tempV = createVector();
+
+  if (dist < _ob1.size / 2 + _ob2.size / 2) {
+    tempV = _ob1.vel;
+    _ob1.vel = _ob2.vel;
+    _ob2.vel = tempV;
+  }
+}
+
+function mousePressed() {
+  //var force = createVector(Math.random()*2 - 1,                        Math.random()*2 - 1);
+
+  //bot.acc.add(force);
+
+  var xF = 0;
+  var yF = 0;
+
+  if (mouseX < bot.pos.x) xF = -1;
+  if (mouseX > bot.pos.x) xF = 1;
+  if (mouseY < bot.pos.y) yF = -1;
+  if (mouseY > bot.pos.y) yF = 1;
+  var sp = 1;
+  var dir = createVector(sp * xF, sp * yF);
+  bot.acc.add(dir);
+}
+
+class Robot {
+  constructor() {
+    this.pos = createVector();
+    this.pos.x = width / 2;
+    this.pos.y = height / 2;
+
+    this.size = 24;
+    this.fill = color(200, 40, 0);
+
+    this.vel = createVector();
+    this.acc = createVector();
+
+    this.af = 1;
+    this.brain = 1;
+  }
+
+  update() {
+    if (this.pos.x < 0) {
+      let force = createVector(4, 0);
+      this.vel.x = 0;
+      this.acc.mult(0);
+      this.acc.add(force);
+    }
+    if (this.pos.x > width) {
+      let force = createVector(-4, 0);
+      this.vel.x = 0;
+      this.acc.mult(0);
+      this.acc.add(force);
+    }
+    if (this.pos.y > height) {
+      let force = createVector(0, -4);
+      this.vel.y = 0;
+      this.acc.mult(0);
+      this.acc.add(force);
+    }
+    if (this.pos.y < 0) {
+      let force = createVector(0, 4);
+      this.vel.y = 0;
+      this.acc.mult(0);
+      this.acc.add(force);
+    }
+
+    this.acc.mult(this.af);
+    this.vel.add(this.acc);
+    this.pos.add(this.vel);
+
+    this.acc.mult(0);
+    this.vel.mult(0.99);
+  }
+
+  think() {
+    let force = createVector();
+    if (this.brain == 1) {
+      if (bot.pos.y < this.pos.y) {
+        force.y = -0.1;
+      }
+      if (bot.pos.y > this.pos.y) {
+        force.y = 0.1;
+      }
+      if (bot.pos.x < this.pos.x) {
+        force.x = -0.1;
+      }
+      if (bot.pos.x > this.pos.x) {
+        force.x = 0.1;
+      }
+    }
+
+    if (this.brain == 2) {
+      if (hyunseo.pos.y < this.pos.y && dragon.pos.y < this.pos.y) {
+        force.y = 0.1;
+      }
+      if (hyunseo.pos.y > this.pos.y && dragon.pos.y > this.pos.y) {
+        force.y = -0.1;
+      }
+      if (hyunseo.pos.x < this.pos.x && dragon.pos.x < this.pos.x) {
+        force.x = 0.1;
+      }
+      if (hyunseo.pos.x > this.pos.x && dragon.pos.x > this.pos.x) {
+        force.x = -0.1;
+      }
+    }
+    //force.x = Math.random() * 5 - 2.5;
+    //force.y = Math.random() * 5 - 2.5;
+    this.acc.add(force);
+  }
+
+  draw() {
+    stroke(255);
+    fill(this.fill);
+    push();
+    translate(this.pos.x, this.pos.y);
+    rect(0, 0, this.size, this.size);
+    pop();
+  }
+}
+
+      </script>
+    </script>
+  </script>
+</body>
+</html>
